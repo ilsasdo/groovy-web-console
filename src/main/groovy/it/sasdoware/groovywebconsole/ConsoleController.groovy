@@ -1,4 +1,6 @@
-package it.sasdoware.groovywebconsole;
+package it.sasdoware.groovywebconsole
+
+import org.springframework.web.bind.annotation.RestController
 
 import javax.servlet.http.HttpServletRequest
 
@@ -8,7 +10,6 @@ import org.springframework.context.ApplicationContext
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
 
 @RestController
 public class ConsoleController {
@@ -16,7 +17,7 @@ public class ConsoleController {
 	@Autowired
 	ApplicationContext appContext
 	
-	@RequestMapping(value="/console", method=RequestMethod.POST)
+	@RequestMapping(value="/consoleController", method=RequestMethod.POST)
 	public Evaluation console (HttpServletRequest request, @RequestParam("code") String code) {
 		println request
 		return eval(code, request);

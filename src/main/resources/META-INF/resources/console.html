@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Groovy Web Console</title>
+<style type="text/css" media="screen">
+    html, body, #main-container, #editor {
+      height: 100%;
+      width: 100%;
+      margin: 0px;
+      padding: 0px;
+    }
+
+    #editor-container {
+        background-color: black;
+    }
+
+    #output-container pre {
+        margin: 0px;
+    }
+
+    #output-container {
+        background-color: lightgray;
+        overflow: scroll;
+    }
+
+    .gutter:hover {
+        background-color: gray;
+        cursor: ns-resize;
+    }
+</style>
+</head>
+<body>
+
+<div id="main-container">
+    <div id="editor-container"><div id="editor"></div></div>
+    <div id="output-container"></div>
+</div>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.2.0/split.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.6/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script type="text/javascript">
+    Split(['#editor-container', '#output-container'], {sizes: [50, 50], direction: 'vertical'});
+
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/groovy");
+    editor.focus();
+    editor.commands.addCommand({
+		name: 'remote-exec',
+		bindKey: {win: 'Ctrl-Enter', mac: 'Command-Enter'},
+		exec: function(editor) {
+			$.post('/consoleController', { code: editor.getValue() }, function (output) {
+			    var ex = "";
+			    if (output.exception) {
+			        ex = '<span class="error">'+output.stackTraceAsString+'</span>\n'
+			    }
+		        $("#output-container").append("<pre>"+ex+"Output:\n"+output.output+"\nResult: "+output.resultAsString+"\n----- Execution Time: "+output.totalTime+"ms\n</pre>")
+
+		        $('#output-container').stop().animate({
+                  scrollTop: $('#output-container')[0].scrollHeight
+                }, 800);
+    		})
+		},
+		readOnly: true
+	});
+</script>
+</body>
+</html>
