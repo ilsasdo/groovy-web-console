@@ -1,8 +1,7 @@
 package it.sasdoware.groovywebconsole
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.bind.annotation.RestController
-
-import javax.servlet.http.HttpServletRequest
 
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,50 +11,55 @@ import org.springframework.web.bind.annotation.RequestMethod
 import org.springframework.web.bind.annotation.RequestParam
 
 @RestController
-public class ConsoleController {
-	
-	@Autowired
-	ApplicationContext appContext
-	
-	@RequestMapping(value="/consoleController", method=RequestMethod.POST)
-	public Evaluation console (HttpServletRequest request, @RequestParam("code") String code) {
-		println request
-		return eval(code, request);
-	}
-	
-	Evaluation eval(String code, request) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream()
-		PrintStream out = new PrintStream(baos)
+class ConsoleController {
 
-		PrintStream systemOut = System.out
-		System.out = out
+    @Autowired
+    ApplicationContext appContext
 
-		Evaluation evaluation = new Evaluation()
+    @Autowired
+    ConsoleBinder consoleBinder
 
-		long startTime = System.currentTimeMillis()
-		try {
-			Binding binding = createBinding(request, out)
-			CompilerConfiguration configuration = new CompilerConfiguration()
+    @Value("\${groovywebconsole.path}")
+    String groovyWebConsole
 
-			GroovyShell groovyShell = new GroovyShell(appContext.getClass().getClassLoader(), binding, configuration)
-			evaluation.result = groovyShell.evaluate code
-		} catch (Throwable t) {
-			evaluation.exception = t
-		}
+    @RequestMapping(value = "\${groovywebconsole.path}", method = RequestMethod.POST)
+    Evaluation console (@RequestParam("code") String code) {
+        return eval(code)
+    }
 
-		evaluation.totalTime = System.currentTimeMillis() - startTime
-		System.out = systemOut
+    @RequestMapping(value = "\${groovywebconsole.path}", method = RequestMethod.GET)
+    String consolePage () {
+        InputStream inputStream = this.getClass().getResourceAsStream("/groovy-web-console.html")
+        String htmlPage = inputStream.text
+        inputStream.close()
+        return htmlPage.replace("\${groovywebconsole.path}", groovyWebConsole)
+    }
 
-		evaluation.output = baos.toString('UTF8')
-		evaluation
-	}
+    Evaluation eval (String code) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream()
+        PrintStream out = new PrintStream(baos)
 
-	private Binding createBinding(HttpServletRequest request, PrintStream out) {
-		new Binding([
-			session          : request.session,
-			request          : request,
-			ctx              : appContext,
-			out              : out
-		])
-	}
+        PrintStream systemOut = System.out
+        System.out = out
+
+        Evaluation evaluation = new Evaluation()
+
+        long startTime = System.currentTimeMillis()
+        try {
+            Binding binding = consoleBinder.createBinding()
+            CompilerConfiguration configuration = new CompilerConfiguration()
+
+            GroovyShell groovyShell = new GroovyShell (appContext.getClass().getClassLoader(), binding, configuration)
+            evaluation.result = groovyShell.evaluate (code)
+        } catch (Throwable t) {
+            evaluation.exception = t
+        }
+
+        evaluation.totalTime = System.currentTimeMillis() - startTime
+        System.out = systemOut
+
+        evaluation.output = baos.toString('UTF8')
+
+        return evaluation
+    }
 }

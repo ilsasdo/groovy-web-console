@@ -1,11 +1,9 @@
 package it.sasdoware.groovywebconsole;
 
-import org.codehaus.groovy.runtime.InvokerHelper;
-
 class Evaluation {
 
-    Object result
-    Throwable exception
+    private Object result
+    private Throwable exception
     Long totalTime
     String output
 
@@ -13,8 +11,12 @@ class Evaluation {
         this.exception = exception
     }
 
+    void setResult (Object result) {
+        this.result = result
+    }
+
     String getResultAsString() {
-        InvokerHelper.inspect result
+         return result?.close()
     }
 
     String getStackTraceAsString() {

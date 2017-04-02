@@ -27,6 +27,64 @@
         background-color: gray;
         cursor: ns-resize;
     }
+
+    .loader,
+    .loader:before,
+    .loader:after {
+      border-radius: 50%;
+      width: 2.5em;
+      height: 2.5em;
+      -webkit-animation-fill-mode: both;
+      animation-fill-mode: both;
+      -webkit-animation: load7 1.8s infinite ease-in-out;
+      animation: load7 1.8s infinite ease-in-out;
+    }
+    .loader {
+      color: #000000;
+      font-size: 10px;
+      margin: auto;
+      position: relative;
+      text-indent: -9999em;
+      -webkit-transform: translateZ(0);
+      -ms-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-animation-delay: -0.16s;
+      animation-delay: -0.16s;
+    }
+    .loader:before,
+    .loader:after {
+      content: '';
+      position: absolute;
+      top: 0;
+    }
+    .loader:before {
+      left: -3.5em;
+      -webkit-animation-delay: -0.32s;
+      animation-delay: -0.32s;
+    }
+    .loader:after {
+      left: 3.5em;
+    }
+    @-webkit-keyframes load7 {
+      0%,
+      80%,
+      100% {
+        box-shadow: 0 2.5em 0 -1.3em;
+      }
+      40% {
+        box-shadow: 0 2.5em 0 0;
+      }
+    }
+    @keyframes load7 {
+      0%,
+      80%,
+      100% {
+        box-shadow: 0 2.5em 0 -1.3em;
+      }
+      40% {
+        box-shadow: 0 2.5em 0 0;
+      }
+    }
 </style>
 </head>
 <body>
@@ -49,10 +107,11 @@
     editor.commands.addCommand({
 		name: 'remote-exec',
 		bindKey: {win: 'Ctrl-Enter', mac: 'Command-Enter'},
-		exec: function(editor) {
-			$.post('/consoleController', { code: editor.getValue() }, function (output) {
+		exec: function (editor) {
+		    $("#output-container").append("<div id='loader' class='loader'>Loading...</div>")
+			$.post('${groovywebconsole.path}', { code: editor.getValue() }, function (output) {
 			    var ex = "";
-			    if (output.exception) {
+			    if (output.stackTraceAsString) {
 			        ex = '<span class="error">'+output.stackTraceAsString+'</span>\n'
 			    }
 		        $("#output-container").append("<pre>"+ex+"Output:\n"+output.output+"\nResult: "+output.resultAsString+"\n----- Execution Time: "+output.totalTime+"ms\n</pre>")
@@ -60,7 +119,11 @@
 		        $('#output-container').stop().animate({
                   scrollTop: $('#output-container')[0].scrollHeight
                 }, 800);
-    		})
+    		}).fail(function() {
+    		    $("#output-container").append("<pre class='error'>An Error has Occurred</pre>")
+            }).always (function () {
+                $("#loader").remove()
+            });
 		},
 		readOnly: true
 	});

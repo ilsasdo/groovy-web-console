@@ -4,7 +4,7 @@ buildscript {
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.2.RELEASE")
-        classpath 'org.springframework:springloaded:1.2.6.RELEASE'
+     //   classpath 'org.springframework:springloaded:1.2.6.RELEASE'
     }
 }
 
@@ -31,6 +31,8 @@ dependencies {
         exclude module: "spring-boot-starter-tomcat"
     }
     compile ("org.springframework.boot:spring-boot-starter-jetty")
+
+    runtime ("org.springframework.boot:spring-boot-devtools")
 
     testCompile("junit:junit")
 }
